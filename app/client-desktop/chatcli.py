@@ -28,8 +28,26 @@ class ChatClient:
                 for w in j[2:]:
                    message="{} {}" . format(message,w)
                 return self.sendmessage(usernameto,message)
+            elif (command=='sendgroup'):
+                usernamesto = j[1].strip()
+                message=""
+                for w in j[2:]:
+                    message="{} {}" . format(message,w)
+                return self.send_group_message(usernamesto,message)
             elif (command=='inbox'):
                 return self.inbox()
+            elif (command=='addrealm'):
+                realmid = j[1].strip()
+                realm_address = j[2].strip()
+                realm_port = j[3].strip()
+                return self.add_realm(realmid, realm_address, realm_port)
+            elif (command == 'sendprivaterealm'):
+                realmid = j[1].strip()
+                username_to = j[2].strip()
+                message = ""
+                for w in j[3:]:
+                    message = "{} {}".format(message, w)
+                return self.send_realm_message(realmid, username_to, message)
             else:
                 return "*Maaf, command tidak benar"
         except IndexError:
@@ -67,6 +85,18 @@ class ChatClient:
             return "message sent to {}" . format(usernameto)
         else:
             return "Error, {}" . format(result['message'])
+        
+    def send_group_message(self,usernames_to="xxx",message="xxx"):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="sendgroup {} {} {} \r\n" . format(self.tokenid,usernames_to,message)
+        print(string)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "message sent to {}" . format(usernames_to)
+        else:
+            return "Error, {}" . format(result['message'])
+        
     def inbox(self):
         if (self.tokenid==""):
             return "Error, not authorized"
@@ -77,8 +107,26 @@ class ChatClient:
         else:
             return "Error, {}" . format(result['message'])
 
+    def add_realm(self, realmid, realm_address, realm_port):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="addrealm {} {} {} \r\n" . format(realmid, realm_address, realm_port)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "Realm {} added" . format(realmid)
+        else:
+            return "Error, {}" . format(result['message'])
 
-
+    def send_realm_message(self, realmid, username_to, message):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="sendprivaterealm {} {} {} {}\r\n" . format(self.tokenid, realmid, username_to, message)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "Message sent to realm {}".format(realmid)
+        else:
+            return "Error, {}".format(result['message'])
+        
 if __name__=="__main__":
     cc = ChatClient()
     while True:
