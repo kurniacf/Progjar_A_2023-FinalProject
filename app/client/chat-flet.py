@@ -72,7 +72,7 @@ def main(page):
     cc = ChatClient()
 
     lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
-    chat = ft.TextField(label="Write a message...", autofocus=True, expand=True)
+    chat = ft.TextField(label="Write a message...", autofocus=True, expand=True, on_submit=btn_click)
     send = ft.ElevatedButton("Send", on_click=btn_click)
 
     username = ft.TextField(label="Username", autofocus=True)
