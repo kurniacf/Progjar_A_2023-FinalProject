@@ -35,10 +35,6 @@ def main(page):
             actions_alignment="end",
         )
 
-    def retry_login(__e__):
-        login_dialog()
-        page.update()
-
     def login_click(__e__):
         if not username.value:
             username.error_text = "Please enter username"
@@ -50,14 +46,15 @@ def main(page):
             login = cc.login(username.value, password.value)
 
             if "Error" in login:
-                page.dialog.title = ft.Text(
-                    "Login Failed", style=ft.TextThemeStyle.TITLE_MEDIUM
-                )
-                page.dialog.content = ft.Text(login, style=ft.TextThemeStyle.BODY_SMALL)
-                page.dialog.actions = [ft.ElevatedButton("Retry", on_click=retry_login)]
+                username.error_text = "Username or Password does not match"
+                password.error_text = "Username or Password does not match"
+                username.update()
+
             else:
                 username.value = ""
                 password.value = ""
+                username.error_text=""
+                password.error_text =""
                 is_login = True
                 page.dialog.open = False
 
