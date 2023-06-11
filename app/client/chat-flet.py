@@ -6,10 +6,20 @@ TARGET_IP = os.getenv("SERVER_IP") or "127.0.0.1"
 TARGET_PORT = os.getenv("SERVER_PORT") or "8889"
 ON_WEB = os.getenv("ONWEB") or "0"
 
+menu_item_username = ft.PopupMenuItem(
+    icon=ft.icons.INSERT_EMOTICON, text="")
+
+is_login = False
+
 
 def main(page):
     page.title = "Chat App"
-    is_login = False
+
+    def function_chain(*funcs):
+        def chained_functions(*args, **kwargs):
+            for func in funcs:
+                func(*args, **kwargs)
+        return chained_functions
 
     def btn_click(__e__):
         if not chat.value:
@@ -24,6 +34,7 @@ def main(page):
             page.update()
 
     def login_dialog():
+        global is_login
         page.dialog = ft.AlertDialog(
             open=not is_login,
             modal=True,
@@ -36,6 +47,7 @@ def main(page):
         )
 
     def login_click(__e__):
+        global is_login
         if not username.value:
             username.error_text = "Please enter username"
             username.update()
@@ -51,20 +63,55 @@ def main(page):
                 username.update()
 
             else:
+                menu_item_username.text = "hallo bang, " + username.value
                 username.value = ""
                 password.value = ""
                 username.error_text=""
                 password.error_text =""
                 is_login = True
                 page.dialog.open = False
+                page.update()
 
+            page.update()
             page.update()
 
     def logout_click(__e__):
+        global is_login
         is_login = False
         cc.logout()
         login_dialog()
+        dlg_modal.open = False
         page.update()
+        
+    # logout modal
+    def close_dlg(e):
+        dlg_modal.open = False
+        page.update()
+    
+    def logout_dlg(__e__):
+        global is_login
+        is_login = False
+        dlg_modal.open = False
+        cc.logout()
+        login_dialog()
+        page.update()
+
+    def open_dlg_modal(e):
+        page.dialog = dlg_modal
+        dlg_modal.open = True
+        page.update() 
+    
+    dlg_modal = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Please confirm"),
+        content=ft.Text("Do you really want to logout"),
+        actions=[
+            ft.TextButton("Yes", on_click=logout_click),
+            ft.TextButton("No", on_click=close_dlg),
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+        on_dismiss=lambda e: print("Modal dialog dismissed!"),
+    )
 
     cc = ChatClient()
 
@@ -80,12 +127,15 @@ def main(page):
         autofocus=True,
         on_submit=login_click,
     )
+    
     login_dialog()
 
     menu = ft.PopupMenuButton(
         items=[
+            menu_item_username,
             ft.PopupMenuItem(
-                icon=ft.icons.LOGOUT, text="Logout", on_click=logout_click
+                # icon=ft.icons.LOGOUT, text="Logout", on_click=logout_click
+                icon=ft.icons.LOGOUT, text="Logout", on_click=open_dlg_modal
             ),
         ]
     )
