@@ -336,7 +336,7 @@ if __name__ == "__main__":
         2. Register: register [username] [password] [nama (gunakan "_" untuk seperator) ] [negara]\n
         3. Menambah realm: addrealm [nama_realm] [address] [port]\n
         4. Mengirim pesan: send [username to] [message]\n
-        5. Mengirim file: senfile [username to] [filename]\n
+        5. Mengirim file: sendfile [username to] [filename]\n
         6. Mengirim pesan ke realm: sendrealm [name_realm] [username to] [message]\n
         7. Mengirim file ke realm: sendfilerealm [name_realm] [username to] [filename]\n
         8. Mengirim pesan ke group: sendgroup [usernames to] [message]\n
