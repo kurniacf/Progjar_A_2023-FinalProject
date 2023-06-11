@@ -7,29 +7,40 @@ TARGET_IP = os.getenv("SERVER_IP") or "127.0.0.1"
 TARGET_PORT = os.getenv("SERVER_PORT") or "8889"
 ON_WEB = os.getenv("ONWEB") or "1"
 
+
 class ChatList(ft.Container):
     def __init__(self, page, users, from_user):
         super().__init__()
         for value in users.values():
-            print(value['username'])
-        self.content = ft.Column([ft.ListTile(
-                                    leading=ft.Icon(ft.icons.PERSON),
-                                    title=ft.Text(f"{value['username']}"),
-                                    on_click=lambda _: page.go(f"/private/{value['username']}"),
-                                    ) for value in users.values()],
-                                 )
+            print(value["username"])
+        self.content = ft.Column(
+            [
+                ft.ListTile(
+                    leading=ft.Icon(ft.icons.PERSON),
+                    title=ft.Text(f"{value['username']}"),
+                    on_click=lambda _: page.go(f"/private/{value['username']}"),
+                )
+                for value in users.values()
+            ],
+        )
 
         self.padding = ft.padding.symmetric(vertical=10)
 
-class ChatRoom():
+
+class ChatRoom:
     def __init__(self, page, cc, from_user, to_user):
-        self.chat = ft.TextField(label="Write a message...", autofocus=True, expand=True, on_submit=self.send_click)
+        self.chat = ft.TextField(
+            label="Write a message...",
+            autofocus=True,
+            expand=True,
+            on_submit=self.send_click,
+        )
         self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
         self.send = ft.IconButton(
-                    icon=ft.icons.SEND_ROUNDED,
-                    tooltip="Send message",
-                    on_click=self.send_click,
-                )
+            icon=ft.icons.SEND_ROUNDED,
+            tooltip="Send message",
+            on_click=self.send_click,
+        )
 
         self.page = page
         self.cc = cc
@@ -42,9 +53,9 @@ class ChatRoom():
             self.chat.error_text = "Please enter message"
             self.page.update()
         else:
-            command = f"send {self.to_user} {self.chat.value}" 
+            command = f"send {self.to_user} {self.chat.value}"
             server_call = self.cc.proses(command)
-            self.lv.controls.append(ft.Text(f"{self.chat.value}"))
+            self.lv.controls.append(ft.Text("To {}: {}".format(self.to_user, self.chat.value)))
 
             if "sent" in server_call:
                 self.page.pubsub.send_all(self.chat.value)
@@ -53,10 +64,10 @@ class ChatRoom():
             self.chat.focus()
             self.page.update()
 
-    def on_chat(self, message): 
+    def on_chat(self, message):
+        
         check_inbox = json.loads(self.cc.inbox())
-        self.lv.controls.append(ft.Text(f"{check_inbox[self.from_user]}"))
-        # lv.controls.append(ft.Text(message))
+        self.lv.controls.append(ft.Text("From {}: {}".format(check_inbox[self.to_user][0]['msg_from'], check_inbox[self.to_user][0]['msg'])))
         self.page.update()
 
 menu_item_username = ft.PopupMenuItem(
@@ -108,8 +119,8 @@ def main(page):
                 menu_item_username.text = "hallo bang, " + username.value
                 username.value = ""
                 password.value = ""
-                username.error_text=""
-                password.error_text =""
+                username.error_text = ""
+                password.error_text = ""
                 is_login = True
                 page.dialog.open = False
                 page.update()
@@ -155,8 +166,6 @@ def main(page):
         on_dismiss=lambda e: print("Modal dialog dismissed!"),
     )
 
-
-    
     username = ft.TextField(label="Username", autofocus=True)
     password = ft.TextField(
         label="Password",
@@ -218,7 +227,7 @@ def main(page):
                         ft.AppBar(title=ft.Text("Private Chat"), actions=[menu]),
                         ft.Card(
                             content=ChatList(page, cc.info(), cc.username),
-                        )
+                        ),
                     ],
                 )
             )
@@ -229,7 +238,10 @@ def main(page):
                 ft.View(
                     f"/private/{troute.username}",
                     [
-                        ft.AppBar(title=ft.Text(f"Private Chat with {troute.username}"), actions=[menu]),
+                        ft.AppBar(
+                            title=ft.Text(f"Private Chat with {troute.username}"),
+                            actions=[menu],
+                        ),
                         cr.lv,
                         ft.Row([cr.chat, cr.send]),
                     ],
