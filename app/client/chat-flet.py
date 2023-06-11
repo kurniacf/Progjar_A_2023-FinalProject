@@ -99,6 +99,14 @@ class ChatRoom:
             print(command)
             server_call = self.cc.proses(command)
             print(server_call)
+            self.lv.controls.append(ft.Text("To {}: Berhasil mengirim file {}".format(self.to_user, e.file_name)))
+
+            if "sent" in server_call:
+                self.page.pubsub.send_all(self.chat.value)
+
+            self.chat.value = ""
+            self.chat.focus()
+            self.page.update()
 
 # menu_item_username = ft.PopupMenuItem(
 #     icon=ft.icons.INSERT_EMOTICON, text="")
