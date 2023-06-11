@@ -125,27 +125,120 @@ def main(page):
     #     return chained_functions
 
     def login_dialog():
-        # global is_login
+        nonlocal is_login
+        global changeto_login
+
+        def changeto_register(e):
+            title=ft.Text(
+                "Welcome! Please Fill Bellow to register", style=ft.TextThemeStyle.TITLE_MEDIUM
+            )
+            page.dialog.actions=[
+                ft.ElevatedButton("Already have an account", on_click=changeto_login),
+                ft.ElevatedButton("Register", on_click=register_click)
+            ]
+            page.dialog.content=ft.Column([username, password,name,country], tight=True)
+            page.update()
+        
+        def changeto_login(e):
+            title=ft.Text(
+                "Welcome! Please login", style=ft.TextThemeStyle.TITLE_MEDIUM
+            )
+            page.dialog.actions=[
+                ft.ElevatedButton("Register Account", on_click=changeto_register),
+                ft.ElevatedButton("Login", on_click=login_click)
+            ]
+            page.dialog.content=ft.Column([username, password], tight=True)
+            page.update()
+
         page.dialog = ft.AlertDialog(
             open=not is_login,
             modal=True,
             title=ft.Text(
-                "Welcome! Please login first", style=ft.TextThemeStyle.TITLE_MEDIUM
+                "Welcome! Please login", style=ft.TextThemeStyle.TITLE_MEDIUM
             ),
             content=ft.Column([username, password], tight=True),
-            actions=[ft.ElevatedButton("Login", on_click=login_click)],
+            actions=[
+                ft.ElevatedButton("Register Account", on_click=changeto_register),
+                ft.ElevatedButton("Login", on_click=login_click)
+            ],
             actions_alignment="end",
         )
-
-    def login_click(__e__):
-        # global is_login
+    def register_click(__e__):
+         # global is_login
         if not username.value:
             username.error_text = "Please enter username"
             username.update()
-        elif not password.value:
+        else :
+            username.error_text = ""
+            username.update()
+
+
+        if not password.value:
             password.error_text = "Please enter password"
             password.update()
-        else:
+        else :
+            password.error_text = ""
+            password.update()
+        
+        if not name.value:
+            name.error_text = "Please enter name"
+            name.update()
+        else :
+            name.error_text = ""
+            name.update()
+
+        if not country.value:
+            country.error_text = "Please enter country"
+            country.update()
+        else :
+            country.error_text = ""
+            country.update()
+
+            
+
+        if username.value != "" and password.value != "" and name.value != "" and country.value != "":
+            login = cc.register(username.value, password.value, name.value, country.value)
+
+            if "Error" in login:
+                country.error_text = "Error When Register"
+                country.update()
+
+            else:
+                # menu_item_username.text = "hallo bang, " + username.value
+                username.value = ""
+                password.value = ""
+                name.value = ""
+                country.value = ""
+                username.error_text = ""
+                password.error_text = ""
+                name.error_text = ""
+                country.error_text = ""
+                page.update()
+                changeto_login(None)
+
+                
+
+            page.update()
+            # page.update()
+
+    def login_click(__e__):
+                 # global is_login
+        if not username.value:
+            username.error_text = "Please enter username"
+            username.update()
+        else :
+            username.error_text = ""
+            username.update()
+
+
+        if not password.value:
+            password.error_text = "Please enter password"
+            password.update()
+        else :
+            password.error_text = ""
+            password.update()
+
+        if username.value != "" and password.value != "":
             login = cc.login(username.value, password.value)
 
             if "Error" in login:
@@ -212,6 +305,8 @@ def main(page):
         autofocus=True,
         on_submit=login_click,
     )
+    name = ft.TextField(label="name", autofocus=True)
+    country = ft.TextField(label="country", autofocus=True)
     
     login_dialog()
 
