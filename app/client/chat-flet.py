@@ -108,28 +108,20 @@ class ChatRoom:
             self.chat.focus()
             self.page.update()
 
-# menu_item_username = ft.PopupMenuItem(
-#     icon=ft.icons.INSERT_EMOTICON, text="")
-
-# is_login = False
-
-
 def main(page):
     cc = ChatClient()
     page.title = "Chat App"
     is_login = False
-    # def function_chain(*funcs):
-    #     def chained_functions(*args, **kwargs):
-    #         for func in funcs:
-    #             func(*args, **kwargs)
-    #     return chained_functions
 
+    global login_dialog
     def login_dialog():
         nonlocal is_login
         global changeto_login
+        global logouttologin
+        global changeto_logout
 
         def changeto_register(e):
-            title=ft.Text(
+            page.dialog.title=ft.Text(
                 "Welcome! Please Fill Bellow to register", style=ft.TextThemeStyle.TITLE_MEDIUM
             )
             page.dialog.actions=[
@@ -140,7 +132,7 @@ def main(page):
             page.update()
         
         def changeto_login(e):
-            title=ft.Text(
+            page.dialog.title=ft.Text(
                 "Welcome! Please login", style=ft.TextThemeStyle.TITLE_MEDIUM
             )
             page.dialog.actions=[
@@ -148,7 +140,9 @@ def main(page):
                 ft.ElevatedButton("Login", on_click=login_click)
             ]
             page.dialog.content=ft.Column([username, password], tight=True)
+
             page.update()
+
 
         page.dialog = ft.AlertDialog(
             open=not is_login,
@@ -163,8 +157,8 @@ def main(page):
             ],
             actions_alignment="end",
         )
+
     def register_click(__e__):
-         # global is_login
         if not username.value:
             username.error_text = "Please enter username"
             username.update()
@@ -194,8 +188,6 @@ def main(page):
             country.error_text = ""
             country.update()
 
-            
-
         if username.value != "" and password.value != "" and name.value != "" and country.value != "":
             login = cc.register(username.value, password.value, name.value, country.value)
 
@@ -204,7 +196,6 @@ def main(page):
                 country.update()
 
             else:
-                # menu_item_username.text = "hallo bang, " + username.value
                 username.value = ""
                 password.value = ""
                 name.value = ""
@@ -215,14 +206,9 @@ def main(page):
                 country.error_text = ""
                 page.update()
                 changeto_login(None)
-
-                
-
             page.update()
-            # page.update()
 
     def login_click(__e__):
-                 # global is_login
         if not username.value:
             username.error_text = "Please enter username"
             username.update()
@@ -247,55 +233,21 @@ def main(page):
                 username.update()
 
             else:
-                # menu_item_username.text = "hallo bang, " + username.value
+                menu_item_username.text = "welcome, " + username.value
                 username.value = ""
                 password.value = ""
                 username.error_text = ""
                 password.error_text = ""
                 is_login = True
                 page.dialog.open = False
-                # page.update()
 
             page.update()
-            # page.update()
-
-    def logout_click(__e__):
-        # global is_login
+    
+    def logout_click(e):
         is_login = False
         cc.logout()
         login_dialog()
-    #     dlg_modal.open = False
-    #     page.update()
-        
-    # # logout modal
-    # def close_dlg(e):
-    #     dlg_modal.open = False
-    #     page.update()
-    
-    # def logout_dlg(__e__):
-    #     # global is_login
-    #     is_login = False
-    #     dlg_modal.open = False
-    #     cc.logout()
-    #     login_dialog()
-    #     page.update()
-
-    # def open_dlg_modal(e):
-    #     page.dialog = dlg_modal
-    #     dlg_modal.open = True
-    #     page.update() 
-    
-    # dlg_modal = ft.AlertDialog(
-    #     modal=True,
-    #     title=ft.Text("Please confirm"),
-    #     content=ft.Text("Do you really want to logout"),
-    #     actions=[
-    #         ft.TextButton("Yes", on_click=logout_click),
-    #         ft.TextButton("No", on_click=close_dlg),
-    #     ],
-    #     actions_alignment=ft.MainAxisAlignment.END,
-    #     on_dismiss=lambda e: print("Modal dialog dismissed!"),
-    # )
+        page.update()
 
     username = ft.TextField(label="Username", autofocus=True)
     password = ft.TextField(
@@ -310,12 +262,13 @@ def main(page):
     
     login_dialog()
 
+    global menu_item_username
+    menu_item_username = ft.PopupMenuItem(text="")
     menu = ft.PopupMenuButton(
         items=[
-            # menu_item_username,
+            menu_item_username,
             ft.PopupMenuItem(
                 icon=ft.icons.LOGOUT, text="Logout", on_click=logout_click
-                # icon=ft.icons.LOGOUT, text="Logout", on_click=open_dlg_modal
             ),
         ]
     )
