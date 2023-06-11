@@ -15,6 +15,7 @@ class ChatClient:
         self.server_address = (TARGET_IP, TARGET_PORT)
         self.sock.connect(self.server_address)
         self.tokenid = ""
+        self.username = ""
 
     def proses(self, cmdline):
         j = cmdline.split(" ")
@@ -116,6 +117,7 @@ class ChatClient:
         result = self.sendstring(string)
         if result["status"] == "OK":
             self.tokenid = result["tokenid"]
+            self.username = username
             return "username {} logged in, token {} ".format(username, self.tokenid)
         else:
             return "Error, {}".format(result["message"])
@@ -309,10 +311,8 @@ class ChatClient:
     def info(self):
         string = "info {} \r\n"
         result = self.sendstring(string)
-        list_user_aktif = "User yang Aktif:\n"
         if result["status"] == "OK":
-            list_user_aktif += f"{result['message']}"
-        return list_user_aktif
+            return result["message"]
 
 
 if __name__ == "__main__":

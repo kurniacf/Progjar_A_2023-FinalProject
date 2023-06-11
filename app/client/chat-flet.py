@@ -1,10 +1,63 @@
 import flet as ft
+import json
 from chatcli import ChatClient
 import os
 
 TARGET_IP = os.getenv("SERVER_IP") or "127.0.0.1"
 TARGET_PORT = os.getenv("SERVER_PORT") or "8889"
-ON_WEB = os.getenv("ONWEB") or "0"
+ON_WEB = os.getenv("ONWEB") or "1"
+
+class ChatList(ft.Container):
+    def __init__(self, page, users, from_user):
+        super().__init__()
+        for value in users.values():
+            print(value['username'])
+        self.content = ft.Column([ft.ListTile(
+                                    leading=ft.Icon(ft.icons.PERSON),
+                                    title=ft.Text(f"{value['username']}"),
+                                    on_click=lambda _: page.go(f"/private/{value['username']}"),
+                                    ) for value in users.values()],
+                                 )
+
+        self.padding = ft.padding.symmetric(vertical=10)
+
+class ChatRoom():
+    def __init__(self, page, cc, from_user, to_user):
+        self.chat = ft.TextField(label="Write a message...", autofocus=True, expand=True, on_submit=self.send_click)
+        self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
+        self.send = ft.IconButton(
+                    icon=ft.icons.SEND_ROUNDED,
+                    tooltip="Send message",
+                    on_click=self.send_click,
+                )
+
+        self.page = page
+        self.cc = cc
+        self.from_user = from_user
+        self.to_user = to_user
+        self.page.pubsub.subscribe(self.on_chat)
+
+    def send_click(self, __e__):
+        if not self.chat.value:
+            self.chat.error_text = "Please enter message"
+            self.page.update()
+        else:
+            command = f"send {self.to_user} {self.chat.value}" 
+            server_call = self.cc.proses(command)
+            self.lv.controls.append(ft.Text(f"{self.chat.value}"))
+
+            if "sent" in server_call:
+                self.page.pubsub.send_all(self.chat.value)
+
+            self.chat.value = ""
+            self.chat.focus()
+            self.page.update()
+
+    def on_chat(self, message): 
+        check_inbox = json.loads(self.cc.inbox())
+        self.lv.controls.append(ft.Text(f"{check_inbox[self.from_user]}"))
+        # lv.controls.append(ft.Text(message))
+        self.page.update()
 
 menu_item_username = ft.PopupMenuItem(
     icon=ft.icons.INSERT_EMOTICON, text="")
@@ -13,6 +66,7 @@ is_login = False
 
 
 def main(page):
+    cc = ChatClient()
     page.title = "Chat App"
 
     def function_chain(*funcs):
@@ -20,18 +74,6 @@ def main(page):
             for func in funcs:
                 func(*args, **kwargs)
         return chained_functions
-
-    def btn_click(__e__):
-        if not chat.value:
-            chat.error_text = "masukkan command"
-            page.update()
-        else:
-            txt = chat.value
-            lv.controls.append(ft.Text(f"command: {txt}"))
-            txt = cc.proses(txt)
-            lv.controls.append(ft.Text(f"result {cc.tokenid}: {txt}"))
-            chat.value = ""
-            page.update()
 
     def login_dialog():
         global is_login
@@ -113,12 +155,8 @@ def main(page):
         on_dismiss=lambda e: print("Modal dialog dismissed!"),
     )
 
-    cc = ChatClient()
 
-    lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
-    chat = ft.TextField(label="Write a message...", autofocus=True, expand=True, on_submit=btn_click)
-    send = ft.ElevatedButton("Send", on_click=btn_click)
-
+    
     username = ft.TextField(label="Username", autofocus=True)
     password = ft.TextField(
         label="Password",
@@ -141,7 +179,9 @@ def main(page):
     )
 
     def route_change(__route__):
+        troute = ft.TemplateRoute(page.route)
         page.views.clear()
+
         page.views.append(
             ft.View(
                 "/",
@@ -170,26 +210,40 @@ def main(page):
             )
         )
 
-        if page.route == "/private":
+        if troute.match("/private"):
             page.views.append(
                 ft.View(
                     "/private",
                     [
                         ft.AppBar(title=ft.Text("Private Chat"), actions=[menu]),
-                        lv,
-                        ft.Row([chat, send]),
+                        ft.Card(
+                            content=ChatList(page, cc.info(), cc.username),
+                        )
                     ],
                 )
             )
 
-        if page.route == "/group":
+        elif troute.match("/private/:username"):
+            cr = ChatRoom(page, cc, cc.username, troute.username)
+            page.views.append(
+                ft.View(
+                    f"/private/{troute.username}",
+                    [
+                        ft.AppBar(title=ft.Text(f"Private Chat with {troute.username}"), actions=[menu]),
+                        cr.lv,
+                        ft.Row([cr.chat, cr.send]),
+                    ],
+                )
+            )
+
+        elif troute.match("/group"):
             page.views.append(
                 ft.View(
                     "/group",
                     [
                         ft.AppBar(title=ft.Text("Group Chat"), actions=[menu]),
-                        lv,
-                        ft.Row([chat, send]),
+                        # lv,
+                        # ft.Row([chat, send]),
                     ],
                 )
             )

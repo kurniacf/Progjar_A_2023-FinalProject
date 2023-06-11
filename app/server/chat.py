@@ -211,7 +211,8 @@ class Chat:
                 logging.warning("GETREALMCHAT: from realm {}".format(realmid))
                 return self.get_realm_chat(realmid, username)
             elif (command=='logout'):
-                return  self.logout()
+                sessionid = j[1].strip()
+                return  self.logout(sessionid)
             elif (command=='info'):
                 return self.info()
             else:
@@ -656,9 +657,9 @@ class Chat:
         while not self.realms[realmid].chat[s_fr['nama']].empty():
             msgs.append(self.realms[realmid].chat[s_fr['nama']].get_nowait())
         return {'status': 'OK', 'messages': msgs}
-    def logout(self):
+    def logout(self, sessionid):
         if (bool(self.sessions) == True):
-            self.sessions.clear()
+            del self.sessions[sessionid]
             return {'status': 'OK'}
         else:
             return {'status': 'ERROR', 'message': 'Belum Login'}

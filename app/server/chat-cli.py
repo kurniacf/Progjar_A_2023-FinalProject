@@ -271,7 +271,7 @@ class ChatClient:
             return "Error, {}".format(result['message'])
     
     def logout(self):
-        string="logout \r\n"
+        string="logout {}\r\n".format(self.tokenid)
         result = self.sendstring(string)
         if result['status']=='OK':
             self.tokenid=""
@@ -280,7 +280,7 @@ class ChatClient:
             return "Error, {}" . format(result['message'])
 
     def info(self):
-        string="info {} \r\n"
+        string="info \r\n"
         result = self.sendstring(string)
         list_user_aktif="User yang Aktif:\n"
         if result['status']=='OK':
@@ -299,7 +299,7 @@ if __name__=="__main__":
         3. Menambah realm: addrealm [nama_realm] [address] [port]\n
         4. Mengirim pesan: send [username to] [message]\n
         5. Mengirim file: senfile [username to] [filename]\n
-        6. Mengirim pesan ke realm: sendrealm [name_realm] [username to] [message]\n
+        6. Mengirim pesan ke realm: sendprivaterealm [name_realm] [username to] [message]\n
         7. Mengirim file ke realm: sendfilerealm [name_realm] [username to] [filename]\n
         8. Mengirim pesan ke group: sendgroup [usernames to] [message]\n
         9. Mengirim file ke group: sendgroupfile [usernames to] [filename]\n
