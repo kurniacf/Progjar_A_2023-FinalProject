@@ -71,5 +71,5 @@ C. Komunikasi dengan server lain
   ```sendgroupfilerealm <nama_realm> <user_dest 1>,<user_dest 2>,...,<user_dest n> <file_path>``` <br>
   ```sendgroupfilerealm realm1 henderson,lineker pokijan.jpg```
   - inbox realm <br>
-  ```inbox <nama_realm> <username>``` <br>
-  ```inbox realm1 henderson```
+  ```getinboxrealm <nama_realm> <username>``` <br>
+  ```getinboxrealm realm1 henderson```
