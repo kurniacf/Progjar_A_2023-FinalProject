@@ -48,6 +48,7 @@ class Chat:
     def __init__(self):
         self.sessions={}
         self.users = {}
+        self.group = {}
         self.users['messi']={ 'nama': 'Lionel Messi', 'negara': 'Argentina', 'password': 'surabaya', 'incoming' : {}, 'outgoing': {}}
         self.users['henderson']={ 'nama': 'Jordan Henderson', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {}, 'outgoing': {}}
         self.users['lineker']={ 'nama': 'Gary Lineker', 'negara': 'Inggris', 'password': 'surabaya','incoming': {}, 'outgoing':{}}
@@ -62,7 +63,7 @@ class Chat:
                 logging.warning("AUTH: auth {} {}" . format(username,password))
                 return self.autentikasi_user(username,password)
             
-            if (command=='register'):
+            elif (command=='register'):
                 username=j[1].strip()
                 password=j[2].strip()
                 nama=j[3].strip()
@@ -71,6 +72,18 @@ class Chat:
                 return self.register_user(username,password, nama, negara)
             
 #   ===================== Komunikasi dalam satu server =====================            
+            elif (command=='addgroup'):
+                sessionid = j[1].strip()
+                groupname = j[2].strip()
+                usernamefrom = self.sessions[sessionid]['username']
+                logging.warning("ADDGROUP: session {} added group {}" . format(sessionid, groupname))
+                return self.addgroup(sessionid,usernamefrom,groupname)
+            elif (command == 'joingroup'):
+                sessionid = j[1].strip()
+                groupname = j[2].strip()
+                usernamefrom = self.sessions[sessionid]['username']
+                logging.warning("JOINGROUP: session {} added group {}" . format(sessionid, groupname))
+                return self.joingroup(sessionid, usernamefrom, groupname)
             elif (command=='send'):
                 sessionid = j[1].strip()
                 usernameto = j[2].strip()
@@ -82,13 +95,13 @@ class Chat:
                 return self.send_message(sessionid,usernamefrom,usernameto,message)
             elif (command=='sendgroup'):
                 sessionid = j[1].strip()
-                usernamesto = j[2].strip().split(',')
+                groupname = j[2].strip()
                 message=""
                 for w in j[3:]:
                     message="{} {}" . format(message,w)
                 usernamefrom = self.sessions[sessionid]['username']
-                logging.warning("SEND: session {} send message from {} to {}" . format(sessionid, usernamefrom,usernamesto))
-                return self.send_group_message(sessionid,usernamefrom,usernamesto,message)
+                logging.warning("SEND: session {} send message from {} to {}" . format(sessionid, groupname, usernamefrom,groupname))
+                return self.send_group_message(sessionid,groupname, usernamefrom,message)
             elif (command=='inbox'):
                 sessionid = j[1].strip()
                 username = self.sessions[sessionid]['username']
@@ -104,12 +117,12 @@ class Chat:
                 return self.send_file(sessionid, usernamefrom, usernameto, filepath, encoded_file)
             elif (command=='sendgroupfile'):
                 sessionid = j[1].strip()
-                usernamesto = j[2].strip().split(',')
+                groupname = j[2].strip()
                 filepath = j[3].strip()
                 encoded_file = j[4].strip()
                 usernamefrom = self.sessions[sessionid]['username']
-                logging.warning("SENDGROUPFILE: session {} send file from {} to {}" . format(sessionid, usernamefrom, usernamesto))
-                return self.send_group_file(sessionid, usernamefrom, usernamesto, filepath, encoded_file)
+                logging.warning("SENDGROUPFILE: session {} send file from {} to {}" . format(sessionid, usernamefrom, groupname))
+                return self.send_group_file(sessionid, usernamefrom, groupname, filepath, encoded_file)
 
 
   #   ===================== Komunikasi dengan server lain =====================           
@@ -253,6 +266,24 @@ class Chat:
         return self.users[username]
 
 #   ===================== Komunikasi dalam satu server =====================
+    def addgroup(self, sessionid, usernamefrom, groupname):
+        if (sessionid not in self.sessions):
+            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        self.group[groupname]={
+            'admin': usernamefrom,
+            'members': [],
+            'message':{}
+        }
+        return {'status': 'OK', 'message': 'Add group successful'}
+    
+    def joingroup(self, sessionid, usernamefrom, groupname):
+        if (sessionid not in self.sessions):
+            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        if usernamefrom in self.group[groupname]['members']:
+            return {'status': 'ERROR', 'message': 'User sudah dalam group'}
+        self.group[groupname]['members'].append(usernamefrom)
+        return {'status': 'OK', 'message': 'Add group successful'}
+    
     def send_message(self,sessionid,username_from,username_dest,message):
         if (sessionid not in self.sessions):
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
@@ -277,17 +308,23 @@ class Chat:
             inqueue_receiver[username_from].put(message)
         return {'status': 'OK', 'message': 'Message Sent'}
     
-    def send_group_message(self, sessionid, username_from, usernames_dest, message):
+    def send_group_message(self, sessionid, groupname, username_from, message):
         if (sessionid not in self.sessions):
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
         s_fr = self.get_user(username_from)
         if s_fr is False:
             return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
-        for username_dest in usernames_dest:
+        for username_dest in self.group[groupname]['members']:
             s_to = self.get_user(username_dest)
             if s_to is False:
                 continue
-            message = {'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
+            message = {'group': groupname,'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
+            try:    
+                self.group[groupname]['message'].put(message)
+            except KeyError:
+                self.group[groupname]['message']=Queue()
+                self.group[groupname]['message'].put(message)
+            
             outqueue_sender = s_fr['outgoing']
             inqueue_receiver = s_to['incoming']
             try:    
@@ -361,7 +398,7 @@ class Chat:
         
         return {'status': 'OK', 'message': 'File Sent'}
 
-    def send_group_file(self, sessionid, username_from, usernames_dest, filepath, encoded_file):
+    def send_group_file(self, sessionid, username_from, groupname, filepath, encoded_file):
         if (sessionid not in self.sessions):
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
         s_fr = self.get_user(username_from)
@@ -369,17 +406,24 @@ class Chat:
             return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
 
         filename = os.path.basename(filepath)
-        for username_dest in usernames_dest:
+        for username_dest in self.group[groupname]['members']:
             s_to = self.get_user(username_dest)
             if s_to is False:
                 continue
             message = {
+                'group': groupname,
                 'msg_from': s_fr['nama'],
                 'msg_to': s_to['nama'],
                 'file_name': filename,
                 'file_content': encoded_file
             }
 
+            try:    
+                self.group[groupname]['message'].put(message)
+            except KeyError:
+                self.group[groupname]['message']=Queue()
+                self.group[groupname]['message'].put(message)
+            
             outqueue_sender = s_fr['outgoing']
             inqueue_receiver = s_to['incoming']
             try:
