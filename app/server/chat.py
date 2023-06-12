@@ -271,7 +271,7 @@ class Chat:
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
         self.group[groupname]={
             'admin': usernamefrom,
-            'members': [],
+            'members': [usernamefrom],
             'message':{}
         }
         return {'status': 'OK', 'message': 'Add group successful'}
@@ -320,10 +320,10 @@ class Chat:
                 continue
             message = {'group': groupname,'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
             try:    
-                self.group[groupname]['message'].put(message)
+                self.group[groupname]['message'][username_from].put(message)
             except KeyError:
-                self.group[groupname]['message']=Queue()
-                self.group[groupname]['message'].put(message)
+                self.group[groupname]['message'][username_from]=Queue()
+                self.group[groupname]['message'][username_from].put(message)
             
             outqueue_sender = s_fr['outgoing']
             inqueue_receiver = s_to['incoming']
@@ -419,10 +419,10 @@ class Chat:
             }
 
             try:    
-                self.group[groupname]['message'].put(message)
+                self.group[groupname]['message'][username_from].put(message)
             except KeyError:
-                self.group[groupname]['message']=Queue()
-                self.group[groupname]['message'].put(message)
+                self.group[groupname]['message'][username_from]=Queue()
+                self.group[groupname]['message'][username_from].put(message)
             
             outqueue_sender = s_fr['outgoing']
             inqueue_receiver = s_to['incoming']

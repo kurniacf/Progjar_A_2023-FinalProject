@@ -35,6 +35,9 @@ class ChatClient:
             elif (command=='addgroup'):
                 groupname = j[1].strip()
                 return self.add_group(groupname)
+            elif (command=='joingroup'):
+                groupname = j[1].strip()
+                return self.join_group(groupname)
             elif (command=='send'):
                 usernameto = j[1].strip()
                 message=""
